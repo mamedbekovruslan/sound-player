@@ -2,10 +2,31 @@ const { merge } = require("webpack-merge");
 const common = require("./webpack.common.js");
 const TerserPlugin = require("terser-webpack-plugin");
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
-module.exports = merge(common, {
+module.exports = merge(common("production"), {
   mode: "production",
   devtool: "source-map",
+  module: {
+    rules: [
+      {
+        test: /\.s[ac]ss$/i,
+        use: [
+          MiniCssExtractPlugin.loader,
+          "css-loader",
+          {
+            loader: "postcss-loader",
+            options: {
+              postcssOptions: {
+                plugins: [["autoprefixer"]],
+              },
+            },
+          },
+          "sass-loader",
+        ],
+      },
+    ],
+  },
   optimization: {
     minimize: true,
     minimizer: [
@@ -16,30 +37,15 @@ module.exports = merge(common, {
           compress: {
             drop_console: true,
           },
-          output: {
-            comments: false,
-          },
         },
       }),
-      new CssMinimizerPlugin({
-        minimizerOptions: {
-          preset: [
-            "default",
-            {
-              discardComments: { removeAll: true },
-            },
-          ],
-        },
-      }),
+      new CssMinimizerPlugin(),
     ],
     splitChunks: {
       chunks: "all",
       minSize: 20000,
       maxSize: 70000,
       minChunks: 1,
-      maxAsyncRequests: 30,
-      maxInitialRequests: 30,
-      automaticNameDelimiter: "~",
       cacheGroups: {
         defaultVendors: {
           test: /[\\/]node_modules[\\/]/,
@@ -55,11 +61,8 @@ module.exports = merge(common, {
     },
   },
   performance: {
+    hints: "warning",
     maxAssetSize: 500000,
     maxEntrypointSize: 500000,
-    hints: "warning",
-    assetFilter: function (assetFilename) {
-      return !/(\.map$)|(fonts)|(images)|(sounds)/.test(assetFilename);
-    },
   },
 });
