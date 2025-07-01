@@ -7,12 +7,15 @@ module.exports = (env) => {
   const isProd = env === "production";
 
   return {
-    entry: "./src/app.js",
+    entry: "./src/app.ts",
     output: {
       path: path.resolve(__dirname, "dist"),
       filename: isProd ? "bundle.[contenthash].js" : "bundle.js",
       publicPath: "/",
       clean: true,
+    },
+    resolve: {
+      extensions: [".ts", ".js"], // Добавьте разрешение .ts файлов
     },
     cache: {
       type: 'filesystem',
@@ -23,6 +26,11 @@ module.exports = (env) => {
     },
     module: {
       rules: [
+        {
+          test: /\.tsx?$/,
+          use: 'ts-loader',
+          exclude: /node_modules/,
+        },
         {
           test: /\.(png|jpg|jpeg|gif|svg)$/i,
           type: "asset/resource",
@@ -55,10 +63,10 @@ module.exports = (env) => {
         filename: isProd ? "styles.[contenthash].css" : "styles.css",
       }),
       new ESLintPlugin({
-        extensions: ["json"],
+        extensions: ["ts", "js"], // Добавьте проверку .ts файлов
         fix: true,
         failOnError: isProd,
-        overrideConfigFile: path.resolve(__dirname, ".eslintrc.json")
+        overrideConfigFile: path.resolve(__dirname, ".eslintrc.js")
       }),
     ],
   };
